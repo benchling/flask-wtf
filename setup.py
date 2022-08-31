@@ -5,9 +5,9 @@ with open('README.rst') as f:
     readme = f.read()
 
 setup(
-    name='Flask-WTF',
-    version='0.13.1.post1',
-    url='https://github.com/lepture/flask-wtf',
+    name='benchling-flask-wtf',
+    version='0.13.1-benchling.1',
+    url='https://github.com/benchling/flask-wtf',
     license='BSD',
     author='Dan Jacob',
     author_email='danjac354@gmail.com',
