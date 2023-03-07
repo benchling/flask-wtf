@@ -3,7 +3,9 @@ import warnings
 
 import werkzeug.datastructures
 from flask import request, session, current_app
-from jinja2 import Markup
+# Accommodates a newer version of jinja2, see
+# https://stackoverflow.com/questions/71645272/importerror-cannot-import-name-markup-from-jinja2
+from jinja2.utils.markupsafe import Markup
 from wtforms.compat import with_metaclass
 from wtforms.ext.csrf.form import SecureForm
 from wtforms.form import FormMeta
