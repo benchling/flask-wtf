@@ -6,7 +6,7 @@ with open('README.rst') as f:
 
 setup(
     name='benchling-flask-wtf',
-    version='0.13.1.post3',
+    version='0.13.1.post4',
     url='https://github.com/benchling/flask-wtf',
     license='BSD',
     author='Dan Jacob',
