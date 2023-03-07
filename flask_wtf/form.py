@@ -5,7 +5,7 @@ import werkzeug.datastructures
 from flask import request, session, current_app
 # Accommodates a newer version of jinja2, see
 # https://stackoverflow.com/questions/71645272/importerror-cannot-import-name-markup-from-jinja2
-from jinja2.utils.markupsafe import Markup
+from jinja2.utils import markupsafe
 from wtforms.compat import with_metaclass
 from wtforms.ext.csrf.form import SecureForm
 from wtforms.form import FormMeta
@@ -154,7 +154,7 @@ class FlaskForm(SecureForm):
 
                 yield f
 
-        return Markup(u'\n'.join(text_type(f) for f in hidden_fields(fields or self)))
+        return markupsafe.Markup(u'\n'.join(text_type(f) for f in hidden_fields(fields or self)))
 
     def validate_on_submit(self):
         """Call :meth:`validate` only if the form is submitted.
