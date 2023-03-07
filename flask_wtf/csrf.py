@@ -14,7 +14,6 @@ import hashlib
 import time
 from flask import Blueprint
 from flask import current_app, session, request, abort
-from werkzeug.security import safe_str_cmp
 from ._compat import to_bytes, string_types
 try:
     from urlparse import urlparse
@@ -110,7 +109,9 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key='csrf_token'
         digestmod=hashlib.sha1
     ).hexdigest()
 
-    return safe_str_cmp(hmac_compare, hmac_csrf)
+    # Originally used werkzeug.security.safe_str_cmp, which was removed in Werkzeug 2.1
+    # https://github.com/pallets/werkzeug/pull/2276/files#diff-97d9d852b7ac5531335c7fdcb2b7e445c9d1d2993d02d56f129202fcdfcafbf3L103-L120
+    return hmac.compare_digest(hmac_compare, hmac_csrf)
 
 
 class CsrfProtect(object):
