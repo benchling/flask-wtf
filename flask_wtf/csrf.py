@@ -14,7 +14,6 @@ import hashlib
 import time
 from flask import Blueprint
 from flask import current_app, session, request, abort
-from werkzeug.security import safe_str_cmp
 from ._compat import to_bytes, string_types
 try:
     from urlparse import urlparse
@@ -110,7 +109,7 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key='csrf_token'
         digestmod=hashlib.sha1
     ).hexdigest()
 
-    return safe_str_cmp(hmac_compare, hmac_csrf)
+    return hmac.compare_digest(hmac_compare, hmac_csrf)
 
 
 class CsrfProtect(object):
