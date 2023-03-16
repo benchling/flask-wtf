@@ -71,7 +71,7 @@ class FlaskForm(SecureForm):
                 if request.files:
                     formdata = formdata.copy()
                     formdata.update(request.files)
-                elif request.get_json():
+                elif request.is_json:
                     formdata = werkzeug.datastructures.MultiDict(request.get_json())
             else:
                 formdata = None
