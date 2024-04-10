@@ -2,7 +2,7 @@
 
 from flask import current_app, Markup
 from flask import json
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 JSONEncoder = json.JSONEncoder
 
@@ -25,7 +25,7 @@ class RecaptchaWidget(object):
         params = current_app.config.get('RECAPTCHA_PARAMETERS')
         script = RECAPTCHA_SCRIPT
         if params:
-            script += u'?' + url_encode(params)
+            script += u'?' + urlencode(params)
 
         attrs = current_app.config.get('RECAPTCHA_DATA_ATTRS', {})
         attrs['sitekey'] = public_key
