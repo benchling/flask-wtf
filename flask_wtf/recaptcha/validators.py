@@ -6,7 +6,7 @@ except ImportError:
 
 from flask import request, current_app
 from wtforms import ValidationError
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 from .._compat import to_bytes, to_unicode
 import json
 
@@ -54,7 +54,7 @@ class Recaptcha(object):
         except KeyError:
             raise RuntimeError("No RECAPTCHA_PRIVATE_KEY config set")
 
-        data = url_encode({
+        data = urlencode({
             'secret':     private_key,
             'remoteip':   remote_addr,
             'response':   response
