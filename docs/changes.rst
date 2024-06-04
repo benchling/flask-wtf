@@ -1,6 +1,21 @@
 Changes
 =======
 
+Version 1.2.1.post2
+-------------
+
+Benchling-fork
+
+- Added logging when our custom deserialization is hit.
+
+Version 1.2.1.post1
+-------------
+
+Benchling-fork
+
+- Support deserializing old signed CSRF tokens
+
+
 Version 1.2.1
 -------------
 

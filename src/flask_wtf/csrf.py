@@ -79,7 +79,7 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
 
     .. versionchanged:: 1.21.post1
         Fallbacks to legacy_validate_csrf method. This provides a
-        comptability layer for old clients.
+        compatibility layer for old clients.
     .. versionchanged:: 0.14
         Raises ``ValidationError`` with a specific error message rather than
         returning ``True`` or ``False``.
@@ -117,6 +117,7 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
         if not hmac.compare_digest(session[field_name], token):
             raise ValidationError("The CSRF tokens do not match.")
     except Exception as e:
+        logger.info("Falling back to legacy CSRF validation.")
         token_key = 'csrf_token' if token_key is None else token_key
         is_valid = legacy_validate_csrf(
             data=data,
