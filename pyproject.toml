@@ -1,5 +1,5 @@
 [project]
-name = "Flask-WTF"
+name = "benchling-flask-wtf"
 description = "Form rendering, validation, and CSRF protection for Flask with WTForms."
 readme = "README.rst"
 license = {file = "LICENSE.rst"}

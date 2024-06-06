@@ -77,42 +77,112 @@ def validate_csrf(data, secret_key=None, time_limit=None, token_key=None):
 
     :raises ValidationError: Contains the reason that validation failed.
 
+    .. versionchanged:: 1.21.post1
+        Fallbacks to legacy_validate_csrf method. This provides a
+        compatibility layer for old clients.
     .. versionchanged:: 0.14
         Raises ``ValidationError`` with a specific error message rather than
         returning ``True`` or ``False``.
     """
+    try:
+        secret_key = _get_config(
+            secret_key,
+            "WTF_CSRF_SECRET_KEY",
+            current_app.secret_key,
+            message="A secret key is required to use CSRF.",
+        )
+        field_name = _get_config(
+            token_key,
+            "WTF_CSRF_FIELD_NAME",
+            "csrf_token",
+            message="A field name is required to use CSRF.",
+        )
+        time_limit = _get_config(time_limit, "WTF_CSRF_TIME_LIMIT", 3600, required=False)
 
-    secret_key = _get_config(
-        secret_key,
-        "WTF_CSRF_SECRET_KEY",
-        current_app.secret_key,
-        message="A secret key is required to use CSRF.",
-    )
-    field_name = _get_config(
-        token_key,
-        "WTF_CSRF_FIELD_NAME",
-        "csrf_token",
-        message="A field name is required to use CSRF.",
-    )
-    time_limit = _get_config(time_limit, "WTF_CSRF_TIME_LIMIT", 3600, required=False)
+        if not data:
+            raise ValidationError("The CSRF token is missing.")
 
-    if not data:
-        raise ValidationError("The CSRF token is missing.")
+        if field_name not in session:
+            raise ValidationError("The CSRF session token is missing.")
 
-    if field_name not in session:
-        raise ValidationError("The CSRF session token is missing.")
+        s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
 
-    s = URLSafeTimedSerializer(secret_key, salt="wtf-csrf-token")
+        try:
+            token = s.loads(data, max_age=time_limit)
+        except SignatureExpired as e:
+            raise ValidationError("The CSRF token has expired.") from e
+        except BadData as e:
+            raise ValidationError("The CSRF token is invalid.") from e
+
+        if not hmac.compare_digest(session[field_name], token):
+            raise ValidationError("The CSRF tokens do not match.")
+    except Exception as e:
+        logger.info("Falling back to legacy CSRF validation.")
+        token_key = 'csrf_token' if token_key is None else token_key
+        is_valid = legacy_validate_csrf(
+            data=data,
+            secret_key=secret_key,
+            time_limit=time_limit,
+            token_key=token_key
+        )
+        if is_valid is False:
+            raise e
+
+
+def legacy_validate_csrf(data, secret_key=None, time_limit=None,
+                         token_key='csrf_token', url_safe=False):
+    """Validates CSRF tokens signed by flask_wtf < 0.14.
+
+    Taken from https://github.com/benchling/flask-wtf/blob/318eea7be584e1c1116fc9d010bbbe95ff0fde55/flask_wtf/csrf.py#L66-L114
+    """
+    import time
+
+    def to_bytes(text):
+        """Transform string to bytes."""
+        if isinstance(text, str):
+            text = text.encode('utf-8')
+        return text
+
+    delimiter = '--' if url_safe else '##'
+    if not data or delimiter not in data:
+        return False
 
     try:
-        token = s.loads(data, max_age=time_limit)
-    except SignatureExpired as e:
-        raise ValidationError("The CSRF token has expired.") from e
-    except BadData as e:
-        raise ValidationError("The CSRF token is invalid.") from e
+        expires, hmac_csrf = data.split(delimiter, 1)
+    except ValueError:
+        return False  # unpack error
 
-    if not hmac.compare_digest(session[field_name], token):
-        raise ValidationError("The CSRF tokens do not match.")
+    if time_limit is None:
+        time_limit = current_app.config.get('WTF_CSRF_TIME_LIMIT', 3600)
+
+    if time_limit:
+        try:
+            expires = int(expires)
+        except ValueError:
+            return False
+
+        now = int(time.time())
+        if now > expires:
+            return False
+
+    if not secret_key:
+        secret_key = current_app.config.get(
+            'WTF_CSRF_SECRET_KEY', current_app.secret_key
+        )
+
+    if token_key not in session:
+        return False
+
+    csrf_build = '%s%s' % (session[token_key], expires)
+    hmac_compare = hmac.new(
+        to_bytes(secret_key),
+        to_bytes(csrf_build),
+        digestmod=hashlib.sha1
+    ).hexdigest()
+
+    # Originally used werkzeug.security.safe_str_cmp, which was removed in Werkzeug 2.1
+    # https://github.com/pallets/werkzeug/pull/2276/files#diff-97d9d852b7ac5531335c7fdcb2b7e445c9d1d2993d02d56f129202fcdfcafbf3L103-L120
+    return hmac.compare_digest(hmac_compare, hmac_csrf)
 
 
 def _get_config(

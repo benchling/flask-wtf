@@ -94,5 +94,5 @@ def test_validate_error_logged(req_ctx, monkeypatch):
 
     monkeypatch.setattr(logger, "info", assert_info)
     FlaskForm().validate()
-    assert len(messages) == 1
-    assert messages[0] == "The CSRF token is missing."
+    assert len(messages) == 2
+    assert messages[1] == "The CSRF token is missing."
